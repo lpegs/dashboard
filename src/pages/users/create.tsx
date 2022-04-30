@@ -3,8 +3,39 @@ import Link from "next/link";
 import { Input } from "../../components/Form/input";
 import { Header } from "../../components/Header";
 import { Sidebar } from "../../components/Sidebar";
+import * as yup from "yup"
+import { yupResolver } from "@hookform/resolvers/yup"
+import { useForm, SubmitHandler } from "react-hook-form"
+
+
+type CreateUserFormData = {
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+  }
+  
+  const CreateUserFormSchema = yup.object().shape({
+    name: yup.string().required("Enter your name"),
+    email: yup.string().required("Email is required").email("Invalid email"),
+    password: yup.string().required("Password is required").min(6, "Minimum 6 characters"),
+    password_confirmation: yup.string().oneOf([null, yup.ref("password")], "Password does not match"),
+  })
+
+  const handleCreateUser: SubmitHandler<CreateUserFormData> = async (values) => {
+      
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    console.log(values);
+
+  }
+
 
 export default function CreateUser() {
+
+    const { register, handleSubmit, formState: { errors }, formState } = useForm({
+        resolver: yupResolver(CreateUserFormSchema)
+      })    
+
     return (
         <Box>
 
@@ -14,17 +45,46 @@ export default function CreateUser() {
 
                     <Sidebar />
 
-                    <Box flex="1" borderRadius="8" bg="gray.800" p={["6", "8"]}>
+                    <Box 
+                        as="form" 
+                        flex="1" 
+                        borderRadius="8" 
+                        bg="gray.800" 
+                        p={["6", "8"]}
+                        onSubmit={handleSubmit(handleCreateUser)}
+                    >
                         <Heading size="lg" fontWeight="normal" >Create user</Heading>
                         <Divider my="6" borderColor="gray.700" />
                         <VStack spacing="8">
                             <SimpleGrid minChildWidth="240px" spacing={["6", "8"]} w="100%">
-                                <Input name="name" label="Name"></Input>
-                                <Input name="email" label="Email"></Input>
+                                <Input 
+                                    name="name" 
+                                    label="Name" 
+                                    {...register('name')}
+                                    error={errors.name}
+                                />
+                                <Input 
+                                    name="email" 
+                                    label="Email" 
+                                    {...register('email')}
+                                    error={errors.email}
+                                />
                             </SimpleGrid>
                             <SimpleGrid minChildWidth="240px" spacing={["6", "8"]} w="100%">
-                                <Input name="password" type="password" label="Password"></Input>
-                                <Input name="password_confirmation" type="password" label="Confirm your password"></Input>
+                                <Input 
+                                    name="password" 
+                                    type="password" 
+                                    label="Password"
+                                    {...register('password')}
+                                    error={errors.password}
+                                />
+                                <Input 
+                                    name="password_confirmation" 
+                                    type="password" 
+                                    label="Confirm your password" 
+                                    {...register('password_confirmation')}
+                                    error={errors.password_confirmation}
+                                />
                             </SimpleGrid>
                         </VStack>
 
@@ -33,7 +93,13 @@ export default function CreateUser() {
                             <Link href="/users" passHref>
                                 <Button as="a" colorScheme="whiteAlpha">Cancel</Button>
                             </Link>
-                                <Button colorScheme="teal">Submit</Button>
+                                <Button 
+                                    type="submit" 
+                                    colorScheme="teal"
+                                    isLoading={formState.isSubmitting}
+                                >
+                                    Submit
+                                </Button>
                             </HStack>
                         </Flex>
 
